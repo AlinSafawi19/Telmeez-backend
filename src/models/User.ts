@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 export interface IUser extends Document {
   firstName: string;
@@ -78,8 +78,8 @@ userSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods['comparePassword'] = async function(candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this['password']);
 };
 
 export default mongoose.model<IUser>('User', userSchema); 

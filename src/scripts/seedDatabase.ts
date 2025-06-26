@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import Plan from '../models/Plan';
 import UserRole from '../models/UserRole';
 import PromoCode from '../models/PromoCode';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/telmeez';
+const MONGO_URI = process.env['MONGO_URI'] || 'mongodb://localhost:27017/telmeez';
 
 const plans = [
   {

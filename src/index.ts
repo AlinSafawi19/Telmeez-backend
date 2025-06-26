@@ -1,6 +1,6 @@
-import * as express from 'express';
-import * as dotenv from 'dotenv';
-import * as cors from "cors";
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from "cors";
 import './config/db';
 import checkoutRoutes from './routes/checkout';
 
@@ -8,7 +8,7 @@ import checkoutRoutes from './routes/checkout';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env['PORT'];
 
 // Middleware
 app.use(cors({

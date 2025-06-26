@@ -1,11 +1,14 @@
 {
   "name": "telmeez-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "start:prod": "node dist/index.js",
     "seed": "ts-node src/scripts/seedDatabase.ts",
     "test-api": "node test-api.js"
   },
