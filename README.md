@@ -189,6 +189,39 @@ The system is designed to work with any payment gateway. Currently configured fo
 - **Bank Transfer Instructions**: Automatic generation of transfer details
 - **Cash on Delivery**: Service delivery confirmation
 
+## 🚨 Error Handling
+
+### Frontend Error Handling
+The checkout system includes comprehensive error handling with user-friendly error messages:
+
+#### Error Types Handled
+- **Validation Errors**: Missing required fields, invalid data formats
+- **Server Errors**: Database issues, configuration problems
+- **Network Errors**: Connection timeouts, network failures
+- **Business Logic Errors**: Duplicate emails, invalid promo codes, plan availability
+
+#### Error Display Features
+- **Prominent Error Banner**: Red error box with clear messaging
+- **Auto-scroll**: Automatically scrolls to error message
+- **Retry Functionality**: One-click retry without re-filling form
+- **Error Clearing**: Errors clear when user starts typing or changes steps
+- **Action Buttons**: Dismiss, Retry, and Refresh options
+
+#### Error Messages
+- **Duplicate Email**: "An account with this email already exists. Please use a different email or try signing in."
+- **Invalid Plan**: "The selected plan is no longer available. Please refresh the page and try again."
+- **System Error**: "System configuration error. Please contact support."
+- **Network Timeout**: "Request timed out. Please check your internet connection and try again."
+- **Server Error**: "Server error. Please try again in a few moments."
+
+#### Testing Error Handling
+Run the error handling test script:
+```bash
+node test-checkout-errors.js
+```
+
+This script tests various error scenarios to ensure proper error handling.
+
 ### Recommended Payment Gateways for Lebanon
 1. **PayTabs** - Popular in MENA region
 2. **HyperPay** - Works in Lebanon
