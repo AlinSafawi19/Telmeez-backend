@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as dotenv from 'dotenv';
 import * as cors from "cors";
 import './config/db';
+import checkoutRoutes from './routes/checkout';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/checkout', checkoutRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
