@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import User from '../models/User';
 import BillingAddress from '../models/BillingAddress';
 import PaymentDetail from '../models/PaymentDetail';
@@ -9,6 +8,7 @@ import Plan from '../models/Plan';
 import UserRole from '../models/UserRole';
 import PromoCode from '../models/PromoCode';
 import PromoCodeUsage from '../models/PromoCodeUsage';
+import { getTranslation, Language } from '../translations';
 
 interface CheckoutRequest {
   // User information
@@ -54,13 +54,17 @@ interface CheckoutRequest {
 export const processCheckout = async (req: Request, res: Response): Promise<void> => {
   try {
     const checkoutData: CheckoutRequest = req.body;
+    
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
 
     // Validate required fields
     if (!checkoutData.firstName || !checkoutData.lastName || !checkoutData.email || 
         !checkoutData.password || !checkoutData.phone || !checkoutData.planId) {
       res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: t.checkout.server_errors.missing_required_fields
       });
       return;
     }
@@ -70,7 +74,7 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
     if (existingUser) {
       res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: t.checkout.server_errors.user_already_exists
       });
       return;
     }
@@ -80,7 +84,7 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
     if (!plan) {
       res.status(400).json({
         success: false,
-        message: 'Invalid plan selected'
+        message: t.checkout.server_errors.invalid_plan
       });
       return;
     }
@@ -102,7 +106,7 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
         if (promoCode.valid_from && now < promoCode.valid_from) {
           res.status(400).json({
             success: false,
-            message: 'Promo code is not yet valid'
+            message: t.checkout.server_errors.promo_code_not_valid_yet
           });
           return;
         }
@@ -110,7 +114,7 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
         if (promoCode.valid_until && now > promoCode.valid_until) {
           res.status(400).json({
             success: false,
-            message: 'Promo code has expired'
+            message: t.checkout.server_errors.promo_code_expired
           });
           return;
         }
@@ -128,7 +132,7 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
     if (!superAdminRole) {
       res.status(500).json({
         success: false,
-        message: 'Super Admin role not found in system'
+        message: t.checkout.server_errors.super_admin_role_not_found
       });
       return;
     }
@@ -311,16 +315,20 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
 
     res.status(201).json({
       success: true,
-      message: 'Checkout completed successfully',
+      message: t.checkout.success.checkout_completed,
       data: responseData
     });
 
   } catch (error: any) {
     console.error('Checkout error:', error);
     
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
+    
     res.status(500).json({
       success: false,
-      message: 'An error occurred during checkout',
+      message: t.checkout.server_errors.checkout_error,
       error: error.message
     });
   }
@@ -329,11 +337,15 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
 export const validatePromoCode = async (req: Request, res: Response): Promise<void> => {
   try {
     const { promoCode, email } = req.body;
+    
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
 
     if (!promoCode) {
       res.status(400).json({
         success: false,
-        message: 'Promo code is required'
+        message: t.checkout.server_errors.promo_code_required
       });
       return;
     }
@@ -347,7 +359,7 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
     if (!promoCodeData) {
       res.status(400).json({
         success: false,
-        message: 'Invalid or inactive promo code'
+        message: t.checkout.server_errors.invalid_promo_code
       });
       return;
     }
@@ -357,7 +369,7 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
     if (promoCodeData.valid_from && now < promoCodeData.valid_from) {
       res.status(400).json({
         success: false,
-        message: 'Promo code is not yet valid'
+        message: t.checkout.server_errors.promo_code_not_valid_yet
       });
       return;
     }
@@ -365,7 +377,7 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
     if (promoCodeData.valid_until && now > promoCodeData.valid_until) {
       res.status(400).json({
         success: false,
-        message: 'Promo code has expired'
+        message: t.checkout.server_errors.promo_code_expired
       });
       return;
     }
@@ -375,7 +387,7 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
       if (!email) {
         res.status(400).json({
           success: false,
-          message: 'Email is required to validate first-time user promo code'
+          message: t.checkout.server_errors.email_required_for_promo
         });
         return;
       }
@@ -385,7 +397,7 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
       if (existingUser) {
         res.status(400).json({
           success: false,
-          message: 'This promo code is only valid for first-time users'
+          message: t.checkout.server_errors.promo_code_first_time_only
         });
         return;
       }
@@ -405,9 +417,13 @@ export const validatePromoCode = async (req: Request, res: Response): Promise<vo
   } catch (error: any) {
     console.error('Promo code validation error:', error);
     
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
+    
     res.status(500).json({
       success: false,
-      message: 'An error occurred while validating promo code',
+      message: t.checkout.server_errors.validation_error,
       error: error.message
     });
   }
@@ -425,9 +441,13 @@ export const getPlans = async (req: Request, res: Response): Promise<void> => {
   } catch (error: any) {
     console.error('Get plans error:', error);
     
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
+    
     res.status(500).json({
       success: false,
-      message: 'An error occurred while fetching plans',
+      message: t.checkout.server_errors.general_error,
       error: error.message
     });
   }
@@ -454,9 +474,13 @@ export const getPaymentMethods = async (req: Request, res: Response): Promise<vo
   } catch (error: any) {
     console.error('Get payment methods error:', error);
     
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
+    
     res.status(500).json({
       success: false,
-      message: 'An error occurred while fetching payment methods',
+      message: t.checkout.server_errors.general_error,
       error: error.message
     });
   }

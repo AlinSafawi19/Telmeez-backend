@@ -154,5 +154,63 @@ async function testCheckoutErrors() {
     console.log('   - Error clearing on user input');
 }
 
+// Test script to verify billing address validation error handling
+const testBillingAddressValidation = () => {
+    console.log('Testing billing address validation error handling...');
+    
+    // Simulate backend validation error response
+    const mockBackendResponse = {
+        success: false,
+        message: 'Validation failed',
+        errors: [
+            'Valid billing address is required',
+            'City is required',
+            'State is required',
+            'Valid ZIP code is required',
+            'Country is required'
+        ]
+    };
+    
+    console.log('Mock backend response:', JSON.stringify(mockBackendResponse, null, 2));
+    
+    // Simulate frontend error mapping logic
+    const validationErrors = {};
+    
+    mockBackendResponse.errors.forEach((error) => {
+        if (error.includes('Valid billing address') || error.includes('address')) {
+            if (!validationErrors.billingAddress) validationErrors.billingAddress = {};
+            validationErrors.billingAddress.address = 'This field is required';
+        } else if (error.includes('City')) {
+            if (!validationErrors.billingAddress) validationErrors.billingAddress = {};
+            validationErrors.billingAddress.city = 'This field is required';
+        } else if (error.includes('State')) {
+            if (!validationErrors.billingAddress) validationErrors.billingAddress = {};
+            validationErrors.billingAddress.state = 'This field is required';
+        } else if (error.includes('ZIP code') || error.includes('zip')) {
+            if (!validationErrors.billingAddress) validationErrors.billingAddress = {};
+            validationErrors.billingAddress.zipCode = 'This field is required';
+        } else if (error.includes('Country')) {
+            if (!validationErrors.billingAddress) validationErrors.billingAddress = {};
+            validationErrors.billingAddress.country = 'This field is required';
+        }
+    });
+    
+    console.log('Mapped validation errors:', JSON.stringify(validationErrors, null, 2));
+    
+    // Check if billing address errors were properly mapped
+    if (validationErrors.billingAddress) {
+        console.log('✅ Billing address validation errors were successfully mapped!');
+        console.log('Expected behavior:');
+        console.log('- User should be redirected to step 3 (billing address)');
+        console.log('- Individual field errors should be displayed');
+        console.log('- General validation message should be shown');
+    } else {
+        console.log('❌ Billing address validation errors were not mapped correctly');
+    }
+    
+    return validationErrors;
+};
+
 // Run the tests
-testCheckoutErrors().catch(console.error); 
+testCheckoutErrors().catch(console.error);
+testBillingAddressValidation(); 
