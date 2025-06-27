@@ -297,7 +297,12 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email
+        email: user.email,
+        phone: user.phone,
+        institutionName: user.institutionName,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt
       },
       subscription: {
         id: subscription._id,
