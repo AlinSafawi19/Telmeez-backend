@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { processCheckout, validatePromoCode, getPlans, getPaymentMethods } from '../controllers/checkoutController';
+import { processCheckout, validatePromoCode, getPlans, getPaymentMethods, sendVerificationCode, verifyCode } from '../controllers/checkoutController';
 import { validateCheckoutData, validatePromoCode as validatePromoCodeMiddleware } from '../middleware/validation';
 
 const router = Router();
@@ -9,6 +9,12 @@ router.post('/', validateCheckoutData, processCheckout);
 
 // POST /api/checkout/validate-promo - Validate promo code
 router.post('/validate-promo', validatePromoCodeMiddleware, validatePromoCode);
+
+// POST /api/checkout/send-verification - Send verification code
+router.post('/send-verification', sendVerificationCode);
+
+// POST /api/checkout/verify-code - Verify email code
+router.post('/verify-code', verifyCode);
 
 // GET /api/checkout/plans - Get available plans
 router.get('/plans', getPlans);

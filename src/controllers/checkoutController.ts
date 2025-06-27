@@ -8,7 +8,9 @@ import Plan from '../models/Plan';
 import UserRole from '../models/UserRole';
 import PromoCode from '../models/PromoCode';
 import PromoCodeUsage from '../models/PromoCodeUsage';
+import VerificationCode from '../models/VerificationCode';
 import { getTranslation, Language } from '../translations';
+import { generateVerificationCode, sendVerificationEmail } from '../services/emailService';
 
 interface CheckoutRequest {
   // User information
@@ -481,6 +483,145 @@ export const getPaymentMethods = async (req: Request, res: Response): Promise<vo
     res.status(500).json({
       success: false,
       message: t.checkout.server_errors.general_error,
+      error: error.message
+    });
+  }
+};
+
+export const sendVerificationCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    // Get language from request headers (default to 'en')
+    const language = (req.headers['accept-language'] as Language) || 'en';
+    const t = getTranslation(language);
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid email format'
+      });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      res.status(400).json({
+        success: false,
+        message: t.checkout.server_errors.user_already_exists
+      });
+      return;
+    }
+
+    // Generate verification code
+    const code = generateVerificationCode();
+    
+    // Set expiration time (10 minutes from now)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    // Invalidate any existing codes for this email
+    await VerificationCode.updateMany(
+      { email: email.toLowerCase() },
+      { used: true }
+    );
+
+    // Save new verification code
+    const verificationCode = new VerificationCode({
+      email: email.toLowerCase(),
+      code,
+      expiresAt
+    });
+
+    await verificationCode.save();
+
+    // Send verification email
+    const emailSent = await sendVerificationEmail(email, code, language);
+    
+    if (!emailSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification code sent successfully',
+      data: {
+        email: email.toLowerCase()
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Send verification code error:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while sending verification code',
+      error: error.message
+    });
+  }
+};
+
+export const verifyCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      res.status(400).json({
+        success: false,
+        message: 'Email and verification code are required'
+      });
+      return;
+    }
+
+    // Find the verification code
+    const verificationCode = await VerificationCode.findOne({
+      email: email.toLowerCase(),
+      code,
+      used: false,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!verificationCode) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification code'
+      });
+      return;
+    }
+
+    // Mark the code as used
+    verificationCode.used = true;
+    await verificationCode.save();
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      data: {
+        email: email.toLowerCase(),
+        verified: true
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Verify code error:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while verifying code',
       error: error.message
     });
   }
