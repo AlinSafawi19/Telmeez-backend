@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const BASE_URL = 'http://localhost:3000/api/checkout';
+const BASE_URL = 'http://localhost:5000/api/checkout';
 
 async function testEmailVerification() {
     console.log('🧪 Testing Email Verification System\n');
@@ -152,7 +152,7 @@ async function testEmailVerification() {
 
     } catch (error) {
         console.error('❌ Test failed with error:', error.message);
-        console.log('\n💡 Make sure the server is running on http://localhost:3000');
+        console.log('\n💡 Make sure the server is running on http://localhost:5000');
     }
 }
 
