@@ -17,7 +17,4 @@ const userRoleSchema = new Schema<IUserRole>({
   timestamps: true
 });
 
-// Index for efficient queries
-userRoleSchema.index({ role: 1 });
-
-export default mongoose.model<IUserRole>('UserRole', userRoleSchema); 
+export default mongoose.model<IUserRole>('UserRole', userRoleSchema)

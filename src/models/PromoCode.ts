@@ -66,7 +66,6 @@ const promoCodeSchema = new Schema<IPromoCode>({
 });
 
 // Index for efficient queries
-promoCodeSchema.index({ code: 1 });
 promoCodeSchema.index({ active: 1 });
 promoCodeSchema.index({ valid_from: 1, valid_until: 1 });
 

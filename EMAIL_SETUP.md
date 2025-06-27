@@ -44,10 +44,6 @@ EMAIL_PASSWORD=your_gmail_app_password
 
 # JWT Secret
 JWT_SECRET=your_jwt_secret_here
-
-# Stripe Configuration (if using)
-STRIPE_SECRET_KEY=your_stripe_secret_key_here
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
 ```
 
 ### 3. Gmail SMTP Configuration

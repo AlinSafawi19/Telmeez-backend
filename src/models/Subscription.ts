@@ -18,8 +18,6 @@ export interface ISubscription extends Document {
   addOns: IAddOn[];
   totalAmount: number;
   currency: string;
-  stripeSubscriptionId?: string;
-  stripeCustomerId?: string;
   cancelAtPeriodEnd: boolean;
   cancelledAt?: Date;
   createdAt: Date;
@@ -93,16 +91,6 @@ const subscriptionSchema = new Schema<ISubscription>({
     default: 'USD',
     uppercase: true
   },
-  stripeSubscriptionId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
-  stripeCustomerId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
   cancelAtPeriodEnd: {
     type: Boolean,
     default: false
@@ -118,7 +106,6 @@ const subscriptionSchema = new Schema<ISubscription>({
 subscriptionSchema.index({ user: 1, status: 1 });
 subscriptionSchema.index({ status: 1 });
 subscriptionSchema.index({ currentPeriodEnd: 1 });
-subscriptionSchema.index({ stripeSubscriptionId: 1 });
 
 // Virtual for checking if subscription is in trial
 subscriptionSchema.virtual('isInTrial').get(function() {

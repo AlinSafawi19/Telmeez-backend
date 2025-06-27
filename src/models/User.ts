@@ -10,9 +10,17 @@ export interface IUser extends Document {
   password: string;
   role: mongoose.Types.ObjectId;
   isActive: boolean;
+  subscriptions?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+// Add interface for static methods
+interface UserModel extends mongoose.Model<IUser> {
+  findUserWithSubscriptions(userId: string): Promise<IUser | null>;
+  findUserWithActiveSubscriptions(userId: string): Promise<IUser | null>;
+  findUsersBySubscriptionStatus(status: string): Promise<any[]>;
 }
 
 const userSchema = new Schema<IUser>({
@@ -59,7 +67,11 @@ const userSchema = new Schema<IUser>({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  subscriptions: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Subscription'
+  }]
 }, {
   timestamps: true
 });
@@ -82,4 +94,52 @@ userSchema.methods['comparePassword'] = async function(candidatePassword: string
   return bcrypt.compare(candidatePassword, this['password']);
 };
 
-export default mongoose.model<IUser>('User', userSchema); 
+// Static methods for user-subscription queries
+userSchema.statics['findUserWithSubscriptions'] = function(userId: string) {
+  return this.findById(userId).populate({
+    path: 'subscriptions',
+    populate: {
+      path: 'plan',
+      select: 'name monthlyPrice annualPrice features'
+    }
+  });
+};
+
+userSchema.statics['findUserWithActiveSubscriptions'] = function(userId: string) {
+  return this.findById(userId).populate({
+    path: 'subscriptions',
+    match: { status: { $in: ['active', 'trialing'] } },
+    populate: {
+      path: 'plan',
+      select: 'name monthlyPrice annualPrice features'
+    }
+  });
+};
+
+userSchema.statics['findUsersBySubscriptionStatus'] = function(status: string) {
+  return this.aggregate([
+    {
+      $lookup: {
+        from: 'subscriptions',
+        localField: '_id',
+        foreignField: 'user',
+        as: 'subscriptions'
+      }
+    },
+    {
+      $match: {
+        'subscriptions.status': status
+      }
+    },
+    {
+      $project: {
+        firstName: 1,
+        lastName: 1,
+        email: 1,
+        subscriptions: 1
+      }
+    }
+  ]);
+};
+
+export default mongoose.model<IUser, UserModel>('User', userSchema); 

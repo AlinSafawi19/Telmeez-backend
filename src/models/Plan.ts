@@ -85,7 +85,6 @@ const planSchema = new Schema<IPlan>({
 });
 
 // Index for efficient queries
-planSchema.index({ name: 1 });
 planSchema.index({ monthlyPrice: 1 });
 
 export default mongoose.model<IPlan>('Plan', planSchema); 

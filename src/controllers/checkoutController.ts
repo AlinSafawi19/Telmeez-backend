@@ -238,6 +238,12 @@ export const processCheckout = async (req: Request, res: Response): Promise<void
 
     await subscription.save();
 
+    // Update user's subscriptions array to maintain bidirectional relationship
+    await User.findByIdAndUpdate(
+      user._id,
+      { $push: { subscriptions: subscription._id } }
+    );
+
     // Determine payment status based on payment method
     let paymentStatus = 'pending';
     if (checkoutData.paymentMethod === 'card') {
