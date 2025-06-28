@@ -6,7 +6,12 @@ import PromoCode from '../models/PromoCode';
 
 dotenv.config();
 
-const MONGO_URI = process.env['MONGO_URI'] || 'mongodb://localhost:27017/telmeez';
+const MONGO_URI = process.env['MONGO_URI'];
+
+if (!MONGO_URI) {
+  console.error('MONGO_URI environment variable is required');
+  process.exit(1);
+}
 
 const plans = [
   {
@@ -77,6 +82,10 @@ const promoCodes = [
 async function seedDatabase() {
   try {
     // Connect to MongoDB
+    if (!MONGO_URI) {
+      console.error('MONGO_URI environment variable is required');
+      process.exit(1);
+    }
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
 
