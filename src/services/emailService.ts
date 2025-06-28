@@ -1,13 +1,13 @@
 import nodemailer from 'nodemailer';
 
-// Create transporter for Gmail
+// Create transporter for Titan Email
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // use TLS
+  host: 'smtp.titan.email',
+  port: 465,
+  secure: true, // use SSL/TLS
   auth: {
-    user: 'alinsafawi19@gmail.com', // Replace with your Gmail address
-    pass: process.env['EMAIL_PASSWORD'] // This should be your Gmail app password
+    user: 'contact@telmeezlb.com', // Titan Email address
+    pass: process.env['EMAIL_PASSWORD'] // This should be your Titan Email password
   }
 });
 
@@ -248,7 +248,7 @@ export const sendVerificationEmail = async (email: string, verificationCode: str
     const template = emailTemplates[language as keyof typeof emailTemplates] || emailTemplates.en;
 
     const mailOptions = {
-      from: '"Telmeez" <alinsafawi19@gmail.com>', // Replace with your Gmail address
+      from: '"Telmeez" <contact@telmeezlb.com>', // Titan Email address
       to: email,
       subject: template.subject,
       html: template.html
@@ -266,7 +266,7 @@ export const sendVerificationEmail = async (email: string, verificationCode: str
     } else if (error.code === 'ECONNREFUSED') {
       console.error('Connection refused - check internet connection and firewall');
     } else if (error.code === 'ETIMEDOUT') {
-      console.error('Connection timeout - check smtp.gmail.com accessibility');
+      console.error('Connection timeout - check smtp.titan.email accessibility');
     }
     
     return false;

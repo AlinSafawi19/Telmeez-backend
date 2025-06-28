@@ -1,33 +1,31 @@
 # Email Verification Setup Guide
 
 ## Overview
-The checkout process now includes email verification when moving from step 1 to step 2. The system uses Gmail SMTP service to send verification codes.
+The checkout process now includes email verification when moving from step 1 to step 2. The system uses Titan Email SMTP service to send verification codes from contact@telmeezlb.com.
 
 ## Email Configuration
 
-### 1. Gmail Setup (Recommended)
+### 1. Titan Email Setup (Current Configuration)
 
-#### Step 1: Enable 2-Step Verification
-1. Go to your Google Account: https://myaccount.google.com/
-2. Navigate to **Security**
-3. Enable **2-Step Verification** (if not already enabled)
+#### Step 1: Titan Email Account Setup
+1. Ensure you have access to the Titan Email account: contact@telmeezlb.com
+2. Make sure the account is properly configured and active
 
-#### Step 2: Generate App Password
-1. Go to **Security → 2-Step Verification**
-2. Scroll down to **App Passwords**
-3. Click **Generate** for "Mail"
-4. Copy the 16-character app password (format: `abcd efgh ijkl mnop`)
+#### Step 2: Get Titan Email Password
+1. Use the password for the contact@telmeezlb.com account
+2. This should be the regular account password (not an app password like Gmail)
 
 #### Step 3: Update Configuration
 1. Update your `.env` file:
    ```env
-   EMAIL_PASSWORD=your_16_character_app_password
+   EMAIL_PASSWORD=your_titan_email_password
    ```
 
-2. Update `src/services/emailService.ts`:
-   - Replace `your-gmail@gmail.com` with your actual Gmail address in two places:
-     - Line 8: `user: 'your-gmail@gmail.com'`
-     - Line 108: `from: '"Telmeez" <your-gmail@gmail.com>'`
+2. The `src/services/emailService.ts` is already configured with:
+   - Host: smtp.titan.email
+   - Port: 465
+   - Security: SSL/TLS
+   - User: contact@telmeezlb.com
 
 ### 2. Create .env file
 Create a `.env` file in the root directory with the following configuration:
@@ -39,30 +37,31 @@ MONGODB_URI=mongodb://localhost:27017/telmeez
 # Server Configuration
 PORT=3000
 
-# Email Configuration (Gmail)
-EMAIL_PASSWORD=your_gmail_app_password
+# Email Configuration (Titan Email)
+EMAIL_PASSWORD=your_titan_email_password
 
 # JWT Secret
 JWT_SECRET=your_jwt_secret_here
 ```
 
-### 3. Gmail SMTP Configuration
-The system is configured to use Gmail SMTP:
-- **SMTP Server**: smtp.gmail.com
-- **Port**: 587
-- **Security**: TLS
-- **Authentication**: App Password
+### 3. Titan Email SMTP Configuration
+The system is configured to use Titan Email SMTP:
+- **SMTP Server**: smtp.titan.email
+- **Port**: 465
+- **Security**: SSL/TLS
+- **Authentication**: Regular account password
+- **From Address**: contact@telmeezlb.com
 
 ### 4. Testing Email Configuration
-Run the Gmail setup test to verify your configuration:
+Run the email setup test to verify your configuration:
 
 ```bash
-node test-gmail-setup.js
+node test-email-connection.js
 ```
 
 This will:
 - Check if EMAIL_PASSWORD is set
-- Test connection to Gmail SMTP servers
+- Test connection to Titan Email SMTP servers
 - Verify authentication
 - Test email sending capability
 
@@ -74,47 +73,40 @@ This will:
 **Error**: `EMAIL_PASSWORD environment variable is not set`
 
 **Solution**:
-1. Generate a Gmail app password
-2. Update your `.env` file with the app password
+1. Get the Titan Email password for contact@telmeezlb.com
+2. Update your `.env` file with the password
 3. Restart your server
 
 #### 2. Authentication Failed
 **Error**: `Authentication failed - check EMAIL_PASSWORD`
 
 **Solution**:
-1. Make sure you're using a Gmail **app password**, not your regular Gmail password
-2. Verify 2-Step Verification is enabled on your Google account
-3. Generate a new app password if needed
-4. Check that you've updated the Gmail address in the code
+1. Make sure you're using the correct password for contact@telmeezlb.com
+2. Verify the Titan Email account is active and not suspended
+3. Check that the password is correct and not expired
 
-#### 3. Gmail Address Not Updated
-**Error**: `Invalid sender address`
-
-**Solution**:
-1. Update `src/services/emailService.ts` with your actual Gmail address
-2. Replace `your-gmail@gmail.com` in both places
-
-#### 4. 2-Step Verification Not Enabled
-**Error**: `Username and Password not accepted`
-
-**Solution**:
-1. Enable 2-Step Verification on your Google account
-2. Generate an app password
-3. Use the app password in your `.env` file
-
-#### 5. Connection Issues
+#### 3. Connection Issues
 **Error**: `Connection refused` or `Connection timeout`
 
 **Solution**:
 1. Check your internet connection
-2. Verify port 587 is not blocked by your firewall
+2. Verify port 465 is not blocked by your firewall
 3. Try using a different network
+4. Check if Titan Email servers are accessible
+
+#### 4. SSL/TLS Issues
+**Error**: `SSL/TLS connection failed`
+
+**Solution**:
+1. Verify the system supports SSL/TLS connections
+2. Check if any antivirus or firewall is blocking SSL connections
+3. Try updating Node.js to the latest version
 
 ### Debugging Steps:
 
-1. **Run the Gmail test**:
+1. **Run the email test**:
    ```bash
-   node test-gmail-setup.js
+   node test-email-connection.js
    ```
 
 2. **Check server logs** for detailed error messages
@@ -124,35 +116,41 @@ This will:
    echo $EMAIL_PASSWORD
    ```
 
-4. **Test with a simple email client** using the same settings
+4. **Test with a simple email client** using the same settings:
+   - Host: smtp.titan.email
+   - Port: 465
+   - Security: SSL/TLS
+   - Username: contact@telmeezlb.com
+   - Password: your_titan_email_password
 
-5. **Check Gmail settings**:
-   - 2-Step Verification should be enabled
-   - App password should be generated for "Mail"
-   - Port 587 with TLS
+5. **Check Titan Email settings**:
+   - Account should be active
+   - SMTP should be enabled
+   - Port 465 with SSL/TLS should be accessible
 
 ### Alternative Email Services:
 
-If Gmail doesn't work, consider:
+If Titan Email doesn't work, consider:
 
-1. **SendGrid** (free tier available)
-2. **Mailgun** (free tier available)
-3. **Outlook/Hotmail** (with app password)
+1. **Gmail** (with app password)
+2. **SendGrid** (free tier available)
+3. **Mailgun** (free tier available)
+4. **Outlook/Hotmail** (with app password)
 
 ## Security Notes
 
 - Never commit your `.env` file to version control
-- Use app passwords, not regular passwords
-- Regularly rotate app passwords
-- Keep your Google account secure
+- Use strong passwords for email accounts
+- Regularly update email account passwords
+- Keep your Titan Email account secure
 
 ## Support
 
 If you continue to experience issues:
 
 1. Check the server logs for detailed error messages
-2. Run the Gmail setup test script
-3. Verify your Google account settings
+2. Run the email setup test script
+3. Verify your Titan Email account settings
 4. Contact support with the specific error messages
 
 ## Email Templates
@@ -213,79 +211,13 @@ Accept-Language: en|ar|fr
 }
 ```
 
-## Error Handling
+## Migration from Gmail
 
-### Common Error Messages
-- **"Email is required"** - Email field is empty
-- **"Invalid email format"** - Email format is invalid
-- **"User with this email already exists"** - Email is already registered
-- **"Failed to send verification email"** - Email service error
-- **"Invalid or expired verification code"** - Code is wrong or expired
-- **"Email and verification code are required"** - Missing required fields
+If you were previously using Gmail and want to switch to Titan Email:
 
-### User Experience
-- **Automatic code sending** when reaching step 2
-- **Resend functionality** if code doesn't arrive
-- **Real-time validation** of verification code
-- **Clear error messages** in user's language
-- **Timeout handling** for network requests
+1. **Update the email service configuration** (already done)
+2. **Update your .env file** with the Titan Email password
+3. **Test the new configuration** using the test scripts
+4. **Update any documentation** that references Gmail
 
-## Security Features
-
-### Code Security
-- **Random 6-digit generation** using cryptographically secure random
-- **Time-based expiration** (10 minutes)
-- **Single-use codes** (cannot be reused)
-- **Email validation** before sending codes
-- **Rate limiting** (can be implemented if needed)
-
-### Database Security
-- **Automatic cleanup** of expired codes
-- **Indexed queries** for performance
-- **Email normalization** (lowercase, trimmed)
-- **Audit trail** (creation timestamps)
-
-## Testing
-
-### Manual Testing
-1. Start the backend server
-2. Navigate to the checkout page
-3. Fill in step 1 with a valid email
-4. Click "Continue" to trigger code sending
-5. Check email for verification code
-6. Enter the code in step 2
-7. Verify successful progression to step 3
-
-### API Testing
-Use the provided test files or tools like Postman to test the endpoints directly.
-
-## Troubleshooting
-
-### Email Not Received
-1. Check spam/junk folder
-2. Verify email address is correct
-3. Check Gmail account settings
-4. Verify EMAIL_PASSWORD in .env file
-5. Check server logs for email errors
-
-### Code Not Working
-1. Ensure code is entered within 10 minutes
-2. Check for extra spaces in code input
-3. Verify email matches the one used in step 1
-4. Try requesting a new code
-
-### Server Errors
-1. Check MongoDB connection
-2. Verify all environment variables are set
-3. Check server logs for detailed error messages
-4. Ensure all dependencies are installed
-
-## Future Enhancements
-
-### Potential Improvements
-- **Rate limiting** for code requests
-- **SMS verification** as backup
-- **Voice call verification** for accessibility
-- **Two-factor authentication** integration
-- **Email templates** customization
-- **Analytics** for verification success rates 
+The system will now send verification emails from contact@telmeezlb.com using Titan Email's SMTP servers. 
