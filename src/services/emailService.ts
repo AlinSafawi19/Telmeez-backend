@@ -359,7 +359,7 @@ export const sendNewsletterWelcomeEmail = async (email: string, language: string
                         </p>
                         <p style="color: #718096; margin: 0; font-size: 12px;">
                           © ${new Date().getFullYear()} Telmeez. All rights reserved. | 
-                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                          <a href="https://telmeezlb.com/unsubscribe" style="color: #a0aec0; text-decoration: none;">Unsubscribe</a>
                         </p>
                       </td>
                     </tr>
@@ -447,7 +447,7 @@ export const sendNewsletterWelcomeEmail = async (email: string, language: string
                         </p>
                         <p style="color: #718096; margin: 0; font-size: 12px;">
                           © ${new Date().getFullYear()} Telmeez. جميع الحقوق محفوظة. | 
-                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                          <a href="https://telmeezlb.com/unsubscribe" style="color: #a0aec0; text-decoration: none;">الإلغاء الاشتراك</a>
                         </p>
                       </td>
                     </tr>
@@ -535,7 +535,7 @@ export const sendNewsletterWelcomeEmail = async (email: string, language: string
                         </p>
                         <p style="color: #718096; margin: 0; font-size: 12px;">
                           © ${new Date().getFullYear()} Telmeez. Tous droits réservés. | 
-                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                          <a href="https://telmeezlb.com/unsubscribe" style="color: #a0aec0; text-decoration: none;">Désabonner</a>
                         </p>
                       </td>
                     </tr>
