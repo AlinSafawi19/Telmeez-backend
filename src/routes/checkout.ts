@@ -4,6 +4,13 @@ import { validateCheckoutData, validatePromoCode as validatePromoCodeMiddleware 
 
 const router = Router();
 
+// Skip CSRF for verification endpoints
+router.use(['/send-verification', '/verify-code'], (req, _res, next) => {
+  // Remove CSRF validation for verification endpoints
+  req.csrfToken = () => 'skipped';
+  next();
+});
+
 // POST /api/checkout - Process complete checkout
 router.post('/', validateCheckoutData, processCheckout);
 

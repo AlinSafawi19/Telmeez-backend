@@ -64,8 +64,7 @@ const userRoles = [
   { role: 'Admin' },
   { role: 'Teacher' },
   { role: 'Parent' },
-  { role: 'Student' },
-  { role: 'Child' }
+  { role: 'Student' }
 ];
 
 const promoCodes = [
