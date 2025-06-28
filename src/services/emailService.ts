@@ -578,4 +578,252 @@ export const verifyEmailConnection = async (): Promise<boolean> => {
     console.error('Email server connection failed:', error);
     return false;
   }
+};
+
+// Send password reset email
+export const sendPasswordResetEmail = async (email: string, verificationCode: string, language: string = 'en'): Promise<boolean> => {
+  try {
+    // Check if EMAIL_PASSWORD is configured
+    if (!process.env['EMAIL_PASSWORD']) {
+      console.error('EMAIL_PASSWORD environment variable is not set');
+      return false;
+    }
+
+    // Email templates based on language
+    const emailTemplates = {
+      en: {
+        subject: 'Password Reset Code - Telmeez',
+        html: `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Password Reset - Telmeez</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; line-height: 1.6;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                        <img src="https://telmeezlb.com/assets/logo-aMd6LOzs.png" alt="Telmeez" style="width: 140px; height: auto; margin-bottom: 20px;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">Password Reset</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">Use this code to reset your password</p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                      <td style="padding: 50px 40px;">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                          <h2 style="color: #1a202c; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">Your password reset code is:</h2>
+                          <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 30px; display: inline-block; margin: 20px 0;">
+                            <span style="font-size: 36px; font-weight: 700; color: #4c51bf; letter-spacing: 12px; font-family: 'Courier New', monospace; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">${verificationCode}</span>
+                          </div>
+                          <p style="color: #718096; margin: 25px 0 0 0; font-size: 15px; font-weight: 500;">
+                            ⏰ This code will expire in <strong>10 minutes</strong>
+                          </p>
+                        </div>
+                        
+                        <div style="background: #f7fafc; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #e2e8f0;">
+                          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">🔒 Security Notice</h3>
+                          <p style="color: #4a5568; margin: 0 0 15px 0; font-size: 14px; line-height: 1.6;">
+                            If you didn't request this password reset, please ignore this email. Your account security is important to us.
+                          </p>
+                          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <a href="mailto:contact@telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">Contact Support</a>
+                            <a href="https://telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">Visit Website</a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background: #2d3748; padding: 30px 40px; text-align: center;">
+                        <p style="color: #a0aec0; margin: 0 0 10px 0; font-size: 13px;">
+                          This email was sent to reset your Telmeez account password
+                        </p>
+                        <p style="color: #718096; margin: 0; font-size: 12px;">
+                          © ${new Date().getFullYear()} Telmeez. All rights reserved. | 
+                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `
+      },
+      ar: {
+        subject: 'رمز إعادة تعيين كلمة المرور - Telmeez',
+        html: `
+          <!DOCTYPE html>
+          <html lang="ar" dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>إعادة تعيين كلمة المرور - Telmeez</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; line-height: 1.6;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                        <img src="https://telmeezlb.com/assets/logo-aMd6LOzs.png" alt="Telmeez" style="width: 140px; height: auto; margin-bottom: 20px;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">إعادة تعيين كلمة المرور</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">استخدم هذا الرمز لإعادة تعيين كلمة المرور الخاصة بك</p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                      <td style="padding: 50px 40px;">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                          <h2 style="color: #1a202c; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">رمز إعادة تعيين كلمة المرور الخاص بك هو:</h2>
+                          <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 30px; display: inline-block; margin: 20px 0;">
+                            <span style="font-size: 36px; font-weight: 700; color: #4c51bf; letter-spacing: 12px; font-family: 'Courier New', monospace; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">${verificationCode}</span>
+                          </div>
+                          <p style="color: #718096; margin: 25px 0 0 0; font-size: 15px; font-weight: 500;">
+                            ⏰ سينتهي هذا الرمز خلال <strong>10 دقائق</strong>
+                          </p>
+                        </div>
+                        
+                        <div style="background: #f7fafc; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #e2e8f0;">
+                          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">🔒 إشعار الأمان</h3>
+                          <p style="color: #4a5568; margin: 0 0 15px 0; font-size: 14px; line-height: 1.6;">
+                            إذا لم تطلب إعادة تعيين كلمة المرور هذه، يرجى تجاهل هذا البريد الإلكتروني. أمان حسابك مهم بالنسبة لنا.
+                          </p>
+                          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <a href="mailto:contact@telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">تواصل مع الدعم</a>
+                            <a href="https://telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">زيارة الموقع</a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background: #2d3748; padding: 30px 40px; text-align: center;">
+                        <p style="color: #a0aec0; margin: 0 0 10px 0; font-size: 13px;">
+                          تم إرسال هذا البريد الإلكتروني لإعادة تعيين كلمة مرور حساب Telmeez الخاص بك
+                        </p>
+                        <p style="color: #718096; margin: 0; font-size: 12px;">
+                          © ${new Date().getFullYear()} Telmeez. جميع الحقوق محفوظة. | 
+                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `
+      },
+      fr: {
+        subject: 'Code de réinitialisation de mot de passe - Telmeez',
+        html: `
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Réinitialisation de mot de passe - Telmeez</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; line-height: 1.6;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                        <img src="https://telmeezlb.com/assets/logo-aMd6LOzs.png" alt="Telmeez" style="width: 140px; height: auto; margin-bottom: 20px;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">Réinitialisation de mot de passe</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">Utilisez ce code pour réinitialiser votre mot de passe</p>
+                      </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                      <td style="padding: 50px 40px;">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                          <h2 style="color: #1a202c; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">Votre code de réinitialisation est :</h2>
+                          <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 30px; display: inline-block; margin: 20px 0;">
+                            <span style="font-size: 36px; font-weight: 700; color: #4c51bf; letter-spacing: 12px; font-family: 'Courier New', monospace; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">${verificationCode}</span>
+                          </div>
+                          <p style="color: #718096; margin: 25px 0 0 0; font-size: 15px; font-weight: 500;">
+                            ⏰ Ce code expirera dans <strong>10 minutes</strong>
+                          </p>
+                        </div>
+                        
+                        <div style="background: #f7fafc; border-radius: 12px; padding: 25px; margin: 30px 0; border: 1px solid #e2e8f0;">
+                          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">🔒 Avis de sécurité</h3>
+                          <p style="color: #4a5568; margin: 0 0 15px 0; font-size: 14px; line-height: 1.6;">
+                            Si vous n'avez pas demandé cette réinitialisation de mot de passe, veuillez ignorer cet e-mail. La sécurité de votre compte est importante pour nous.
+                          </p>
+                          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <a href="mailto:contact@telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">Contacter le support</a>
+                            <a href="https://telmeezlb.com" style="display: inline-block; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: all 0.3s ease;">Visiter le site</a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background: #2d3748; padding: 30px 40px; text-align: center;">
+                        <p style="color: #a0aec0; margin: 0 0 10px 0; font-size: 13px;">
+                          Cet e-mail a été envoyé pour réinitialiser le mot de passe de votre compte Telmeez
+                        </p>
+                        <p style="color: #718096; margin: 0; font-size: 12px;">
+                          © ${new Date().getFullYear()} Telmeez. Tous droits réservés. | 
+                          <a href="https://telmeezlb.com" style="color: #a0aec0; text-decoration: none;">telmeezlb.com</a>
+                        </p>
+                      </td>
+                    </tr>
+                    
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `
+      }
+    };
+
+    const template = emailTemplates[language as keyof typeof emailTemplates] || emailTemplates.en;
+
+    const mailOptions = {
+      from: '"Telmeez" <contact@telmeezlb.com>',
+      to: email,
+      subject: template.subject,
+      html: template.html
+    };
+
+    //const info = await transporter.sendMail(mailOptions);
+    //console.log('Password reset email sent:', info.messageId);
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error: any) {
+    console.error('Error sending password reset email:', error);
+    return false;
+  }
 }; 
