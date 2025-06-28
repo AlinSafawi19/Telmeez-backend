@@ -17,7 +17,7 @@ const failedAttempts = new Map<string, { count: number; lastAttempt: number }>()
 
 export const signin = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -90,7 +90,15 @@ export const signin = async (req: Request, res: Response) => {
       return;
     }
 
-    // Generate access token (short-lived)
+    // Determine token expiry times based on rememberMe
+    const accessTokenExpiry = rememberMe ? '7d' : SECURITY_CONFIG.JWT.ACCESS_TOKEN_EXPIRY;
+    const refreshTokenExpiry = rememberMe ? '30d' : SECURITY_CONFIG.JWT.REFRESH_TOKEN_EXPIRY;
+    
+    // Calculate cookie maxAge in milliseconds
+    const accessTokenMaxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : SECURITY_CONFIG.COOKIES.ACCESS_TOKEN_MAX_AGE;
+    const refreshTokenMaxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : SECURITY_CONFIG.COOKIES.REFRESH_TOKEN_MAX_AGE;
+
+    // Generate access token
     const accessToken = (jwt.sign as any)(
       {
         userId: user._id,
@@ -99,17 +107,17 @@ export const signin = async (req: Request, res: Response) => {
         permissions: [] // No permissions field in current model
       },
       SECURITY_CONFIG.JWT.SECRET,
-      { expiresIn: SECURITY_CONFIG.JWT.ACCESS_TOKEN_EXPIRY }
+      { expiresIn: accessTokenExpiry }
     );
 
-    // Generate refresh token (long-lived)
+    // Generate refresh token
     const refreshToken = (jwt.sign as any)(
       {
         userId: user._id,
         type: 'refresh'
       },
       SECURITY_CONFIG.JWT.REFRESH_SECRET,
-      { expiresIn: SECURITY_CONFIG.JWT.REFRESH_TOKEN_EXPIRY }
+      { expiresIn: refreshTokenExpiry }
     );
 
     // Set secure cookies
@@ -117,14 +125,14 @@ export const signin = async (req: Request, res: Response) => {
       httpOnly: SECURITY_CONFIG.COOKIES.HTTP_ONLY,
       secure: SECURITY_CONFIG.COOKIES.SECURE,
       sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE,
-      maxAge: SECURITY_CONFIG.COOKIES.ACCESS_TOKEN_MAX_AGE
+      maxAge: accessTokenMaxAge
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: SECURITY_CONFIG.COOKIES.HTTP_ONLY,
       secure: SECURITY_CONFIG.COOKIES.SECURE,
       sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE,
-      maxAge: SECURITY_CONFIG.COOKIES.REFRESH_TOKEN_MAX_AGE
+      maxAge: refreshTokenMaxAge
     });
 
     // Return user data (without password) and token

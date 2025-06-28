@@ -12,11 +12,10 @@ async function createTestUser() {
         console.log('✅ Connected to database');
 
         // Find or create admin role
-        let adminRole = await UserRole.findOne({ name: 'admin' });
+        let adminRole = await UserRole.findOne({ role: 'admin' });
         if (!adminRole) {
             adminRole = await UserRole.create({
-                name: 'admin',
-                permissions: ['read', 'write', 'delete', 'admin']
+                role: 'admin'
             });
             console.log('✅ Created admin role');
         } else {
