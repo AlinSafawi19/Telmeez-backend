@@ -439,7 +439,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 // Forgot Password - Request password reset
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
+    const { email, language = 'en' } = req.body;
 
     // Validate input
     if (!email) {
@@ -474,8 +474,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       used: false
     });
 
-    // Send email
-    const emailSent = await sendPasswordResetEmail(email, verificationCode, 'en'); // Default to English for now
+    // Send email with user's selected language
+    const emailSent = await sendPasswordResetEmail(email, verificationCode, language);
 
     if (!emailSent) {
       res.status(500).json({
