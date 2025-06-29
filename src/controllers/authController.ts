@@ -25,7 +25,8 @@ export const signin = async (req: Request, res: Response) => {
     if (!email || !password) {
       res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        error_code: !email ? 'EMAIL_REQUIRED' : 'PASSWORD_REQUIRED',
+        message: !email ? 'Email is required' : 'Password is required'
       });
       return;
     }
@@ -38,6 +39,7 @@ export const signin = async (req: Request, res: Response) => {
         const remainingTime = Math.ceil((SECURITY_CONFIG.ACCOUNT.LOCKOUT_DURATION - timeSinceLastAttempt) / 1000 / 60);
         res.status(423).json({
           success: false,
+          error_code: 'ACCOUNT_LOCKED',
           message: `Account temporarily locked. Please try again in ${remainingTime} minutes.`
         });
         return;
@@ -54,6 +56,7 @@ export const signin = async (req: Request, res: Response) => {
       recordFailedAttempt(email);
       res.status(401).json({
         success: false,
+        error_code: 'INVALID_CREDENTIALS',
         message: 'Invalid email or password'
       });
       return;
@@ -63,6 +66,7 @@ export const signin = async (req: Request, res: Response) => {
     if (!user.isActive) {
       res.status(401).json({
         success: false,
+        error_code: 'ACCOUNT_DEACTIVATED',
         message: 'Account is deactivated. Please contact support.'
       });
       return;
@@ -74,6 +78,7 @@ export const signin = async (req: Request, res: Response) => {
       recordFailedAttempt(email);
       res.status(401).json({
         success: false,
+        error_code: 'INVALID_CREDENTIALS',
         message: 'Invalid email or password'
       });
       return;
@@ -87,6 +92,7 @@ export const signin = async (req: Request, res: Response) => {
     if (!userRole || !userRole.role) {
       res.status(500).json({
         success: false,
+        error_code: 'USER_ROLE_NOT_FOUND',
         message: 'User role not found'
       });
       return;
@@ -162,6 +168,7 @@ export const signin = async (req: Request, res: Response) => {
     console.error('Signin error:', error);
     res.status(500).json({
       success: false,
+      error_code: 'INTERNAL_SERVER_ERROR',
       message: 'Internal server error'
     });
   }
@@ -342,6 +349,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!email) {
       res.status(400).json({
         success: false,
+        error_code: 'EMAIL_REQUIRED',
         message: 'Email is required'
       });
       return;
@@ -376,6 +384,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!emailSent) {
       res.status(500).json({
         success: false,
+        error_code: 'EMAIL_SEND_FAILED',
         message: 'Failed to send password reset email'
       });
       return;
@@ -390,6 +399,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
+      error_code: 'INTERNAL_SERVER_ERROR',
       message: 'Internal server error'
     });
   }
@@ -404,7 +414,8 @@ export const verifyPasswordResetCode = async (req: Request, res: Response) => {
     if (!email || !code) {
       res.status(400).json({
         success: false,
-        message: 'Email and verification code are required'
+        error_code: !email ? 'EMAIL_REQUIRED' : 'CODE_REQUIRED',
+        message: !email ? 'Email is required' : 'Verification code is required'
       });
       return;
     }
@@ -420,6 +431,7 @@ export const verifyPasswordResetCode = async (req: Request, res: Response) => {
     if (!verificationCode) {
       res.status(400).json({
         success: false,
+        error_code: 'INVALID_OR_EXPIRED_CODE',
         message: 'Invalid or expired verification code'
       });
       return;
@@ -438,6 +450,7 @@ export const verifyPasswordResetCode = async (req: Request, res: Response) => {
     console.error('Verify password reset code error:', error);
     res.status(500).json({
       success: false,
+      error_code: 'INTERNAL_SERVER_ERROR',
       message: 'Internal server error'
     });
   }
@@ -452,7 +465,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     if (!email || !code || !newPassword) {
       res.status(400).json({
         success: false,
-        message: 'Email, verification code, and new password are required'
+        error_code: !email ? 'EMAIL_REQUIRED' : !code ? 'CODE_REQUIRED' : 'PASSWORD_REQUIRED',
+        message: !email ? 'Email is required' : !code ? 'Verification code is required' : 'New password is required'
       });
       return;
     }
@@ -461,6 +475,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     if (newPassword.length < 8) {
       res.status(400).json({
         success: false,
+        error_code: 'PASSWORD_TOO_SHORT',
         message: 'Password must be at least 8 characters long'
       });
       return;
@@ -477,6 +492,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     if (!verificationCode) {
       res.status(400).json({
         success: false,
+        error_code: 'INVALID_OR_EXPIRED_CODE',
         message: 'Invalid or expired verification code'
       });
       return;
@@ -487,6 +503,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     if (!user) {
       res.status(404).json({
         success: false,
+        error_code: 'USER_NOT_FOUND',
         message: 'User not found'
       });
       return;
@@ -509,6 +526,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
+      error_code: 'INTERNAL_SERVER_ERROR',
       message: 'Internal server error'
     });
   }
