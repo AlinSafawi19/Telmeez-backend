@@ -93,7 +93,7 @@ export const validateSecurityConfig = () => {
   ];
 
   const missing = requiredEnvVars.filter(varName => !process.env[varName]);
-  
+
   if (missing.length > 0) {
     console.warn('⚠️  Missing required environment variables:', missing.join(', '));
     console.warn('⚠️  Using default values. This is not secure for production!');
@@ -103,9 +103,9 @@ export const validateSecurityConfig = () => {
     if (missing.length > 0) {
       throw new Error(`Missing required environment variables for production: ${missing.join(', ')}`);
     }
-    
-    if (process.env['JWT_SECRET'] === 'your-secret-key' || 
-        process.env['JWT_REFRESH_SECRET'] === 'your-refresh-secret-key') {
+
+    if (process.env['JWT_SECRET'] === 'your-secret-key' ||
+      process.env['JWT_REFRESH_SECRET'] === 'your-refresh-secret-key') {
       throw new Error('Default JWT secrets detected. Please set proper secrets for production.');
     }
   }

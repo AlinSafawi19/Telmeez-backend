@@ -154,7 +154,7 @@ export const getNewsletterStats = async (_req: Request, res: Response) => {
     // Get recent subscriptions (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const recentSubscriptions = await Newsletter.countDocuments({
       subscribedAt: { $gte: thirtyDaysAgo },
       isSubscribed: true
