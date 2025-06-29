@@ -12,7 +12,22 @@ export const SECURITY_CONFIG = {
   ACCOUNT: {
     MAX_LOGIN_ATTEMPTS: parseInt(process.env['MAX_LOGIN_ATTEMPTS'] || '5'),
     LOCKOUT_DURATION: parseInt(process.env['LOCKOUT_DURATION'] || '900000'), // 15 minutes in ms
+    PROGRESSIVE_LOCKOUT: {
+      ENABLED: process.env['PROGRESSIVE_LOCKOUT'] === 'true',
+      MULTIPLIER: parseFloat(process.env['LOCKOUT_MULTIPLIER'] || '2'), // Double lockout time each time
+      MAX_LOCKOUT: parseInt(process.env['MAX_LOCKOUT_DURATION'] || '86400000'), // 24 hours max
+    },
+    IP_TRACKING: {
+      ENABLED: process.env['IP_TRACKING'] === 'true',
+      MAX_ATTEMPTS_PER_IP: parseInt(process.env['MAX_ATTEMPTS_PER_IP'] || '10'),
+      IP_LOCKOUT_DURATION: parseInt(process.env['IP_LOCKOUT_DURATION'] || '3600000'), // 1 hour
+    },
     BCRYPT_ROUNDS: parseInt(process.env['BCRYPT_ROUNDS'] || '12'),
+    SUSPICIOUS_ACTIVITY: {
+      ENABLED: process.env['SUSPICIOUS_ACTIVITY_DETECTION'] === 'true',
+      MIN_ATTEMPTS_FOR_ALERT: parseInt(process.env['MIN_ATTEMPTS_FOR_ALERT'] || '3'),
+      ALERT_EMAIL: process.env['SECURITY_ALERT_EMAIL'],
+    },
   },
 
   // Rate Limiting
@@ -21,6 +36,8 @@ export const SECURITY_CONFIG = {
     AUTH_MAX_ATTEMPTS: parseInt(process.env['RATE_LIMIT_MAX'] || '5'),
     GENERAL_WINDOW_MS: 15 * 60 * 1000, // 15 minutes
     GENERAL_MAX_REQUESTS: parseInt(process.env['GENERAL_RATE_LIMIT_MAX'] || '100'),
+    BRUTE_FORCE_WINDOW_MS: 5 * 60 * 1000, // 5 minutes
+    BRUTE_FORCE_MAX_ATTEMPTS: parseInt(process.env['BRUTE_FORCE_MAX'] || '10'),
   },
 
   // Cookie Configuration

@@ -14,12 +14,94 @@ interface PopulatedUserRole {
   role: string;
 }
 
-// Track failed login attempts
-const failedAttempts = new Map<string, { count: number; lastAttempt: number }>();
+// Enhanced tracking for failed login attempts
+interface FailedAttemptInfo {
+  count: number;
+  lastAttempt: number;
+  lockoutCount: number; // Track how many times account has been locked
+  ipAddresses: Set<string>; // Track IP addresses used
+  firstAttempt: number; // Track when first attempt was made
+}
+
+// Track failed login attempts with enhanced information
+const failedAttempts = new Map<string, FailedAttemptInfo>();
+
+// Track IP-based attempts
+const ipAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
+// Helper function to get client IP
+function getClientIP(req: Request): string {
+  return req.ip || 
+         req.connection.remoteAddress || 
+         req.socket.remoteAddress || 
+         (req.connection as any).socket?.remoteAddress || 
+         'unknown';
+}
+
+// Enhanced helper function to record failed login attempts
+function recordFailedAttempt(email: string, ipAddress: string) {
+  const current = failedAttempts.get(email) || { 
+    count: 0, 
+    lastAttempt: 0, 
+    lockoutCount: 0,
+    ipAddresses: new Set<string>(),
+    firstAttempt: Date.now()
+  };
+  
+  current.count += 1;
+  current.lastAttempt = Date.now();
+  current.ipAddresses.add(ipAddress);
+  
+  // Track IP-based attempts
+  const ipInfo = ipAttempts.get(ipAddress) || { count: 0, lastAttempt: 0 };
+  ipInfo.count += 1;
+  ipInfo.lastAttempt = Date.now();
+  ipAttempts.set(ipAddress, ipInfo);
+  
+  failedAttempts.set(email, current);
+  
+  // Check for suspicious activity
+  if (SECURITY_CONFIG.ACCOUNT.SUSPICIOUS_ACTIVITY.ENABLED && 
+      current.count >= SECURITY_CONFIG.ACCOUNT.SUSPICIOUS_ACTIVITY.MIN_ATTEMPTS_FOR_ALERT) {
+    // Log suspicious activity (in production, this could trigger alerts)
+    console.warn(`🚨 Suspicious activity detected for email: ${email}`, {
+      attempts: current.count,
+      ipAddresses: Array.from(current.ipAddresses),
+      timeSpan: Date.now() - current.firstAttempt
+    });
+  }
+}
+
+// Helper function to calculate progressive lockout duration
+function calculateLockoutDuration(email: string): number {
+  const info = failedAttempts.get(email);
+  if (!info || !SECURITY_CONFIG.ACCOUNT.PROGRESSIVE_LOCKOUT.ENABLED) {
+    return SECURITY_CONFIG.ACCOUNT.LOCKOUT_DURATION;
+  }
+  
+  const baseDuration = SECURITY_CONFIG.ACCOUNT.LOCKOUT_DURATION;
+  const multiplier = Math.pow(SECURITY_CONFIG.ACCOUNT.PROGRESSIVE_LOCKOUT.MULTIPLIER, info.lockoutCount);
+  const progressiveDuration = baseDuration * multiplier;
+  
+  return Math.min(progressiveDuration, SECURITY_CONFIG.ACCOUNT.PROGRESSIVE_LOCKOUT.MAX_LOCKOUT);
+}
+
+// Helper function to check IP-based lockout
+function isIPLocked(ipAddress: string): boolean {
+  if (!SECURITY_CONFIG.ACCOUNT.IP_TRACKING.ENABLED) return false;
+  
+  const ipInfo = ipAttempts.get(ipAddress);
+  if (!ipInfo) return false;
+  
+  const timeSinceLastAttempt = Date.now() - ipInfo.lastAttempt;
+  return ipInfo.count >= SECURITY_CONFIG.ACCOUNT.IP_TRACKING.MAX_ATTEMPTS_PER_IP && 
+         timeSinceLastAttempt < SECURITY_CONFIG.ACCOUNT.IP_TRACKING.IP_LOCKOUT_DURATION;
+}
 
 export const signin = async (req: Request, res: Response) => {
   try {
     const { email, password, rememberMe } = req.body;
+    const clientIP = getClientIP(req);
 
     // Validate input
     if (!email || !password) {
@@ -31,21 +113,38 @@ export const signin = async (req: Request, res: Response) => {
       return;
     }
 
+    // Check for IP-based lockout
+    if (isIPLocked(clientIP)) {
+      const remainingTime = Math.ceil((SECURITY_CONFIG.ACCOUNT.IP_TRACKING.IP_LOCKOUT_DURATION - 
+        (Date.now() - (ipAttempts.get(clientIP)?.lastAttempt || 0))) / 1000 / 60);
+      res.status(423).json({
+        success: false,
+        error_code: 'IP_LOCKED',
+        message: `Too many failed attempts from this IP. Please try again in ${remainingTime} minutes.`
+      });
+      return;
+    }
+
     // Check for account lockout
     const lockoutInfo = failedAttempts.get(email);
     if (lockoutInfo && lockoutInfo.count >= SECURITY_CONFIG.ACCOUNT.MAX_LOGIN_ATTEMPTS) {
+      const lockoutDuration = calculateLockoutDuration(email);
       const timeSinceLastAttempt = Date.now() - lockoutInfo.lastAttempt;
-      if (timeSinceLastAttempt < SECURITY_CONFIG.ACCOUNT.LOCKOUT_DURATION) {
-        const remainingTime = Math.ceil((SECURITY_CONFIG.ACCOUNT.LOCKOUT_DURATION - timeSinceLastAttempt) / 1000 / 60);
+      
+      if (timeSinceLastAttempt < lockoutDuration) {
+        const remainingTime = Math.ceil((lockoutDuration - timeSinceLastAttempt) / 1000 / 60);
         res.status(423).json({
           success: false,
           error_code: 'ACCOUNT_LOCKED',
-          message: `Account temporarily locked. Please try again in ${remainingTime} minutes.`
+          message: `Account temporarily locked due to multiple failed attempts. Please try again in ${remainingTime} minutes.`,
+          lockout_count: lockoutInfo.lockoutCount + 1
         });
         return;
       } else {
         // Reset lockout after duration
-        failedAttempts.delete(email);
+        lockoutInfo.count = 0;
+        lockoutInfo.lockoutCount += 1; // Increment lockout count for progressive lockout
+        failedAttempts.set(email, lockoutInfo);
       }
     }
 
@@ -53,7 +152,7 @@ export const signin = async (req: Request, res: Response) => {
     const user = await User.findOne({ email }).populate('role', 'role');
     
     if (!user) {
-      recordFailedAttempt(email);
+      recordFailedAttempt(email, clientIP);
       res.status(401).json({
         success: false,
         error_code: 'INVALID_CREDENTIALS',
@@ -75,7 +174,7 @@ export const signin = async (req: Request, res: Response) => {
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      recordFailedAttempt(email);
+      recordFailedAttempt(email, clientIP);
       res.status(401).json({
         success: false,
         error_code: 'INVALID_CREDENTIALS',
@@ -86,6 +185,11 @@ export const signin = async (req: Request, res: Response) => {
 
     // Clear failed attempts on successful login
     failedAttempts.delete(email);
+    
+    // Clear IP-based attempts for this IP (optional - could keep for additional security)
+    if (SECURITY_CONFIG.ACCOUNT.IP_TRACKING.ENABLED) {
+      ipAttempts.delete(clientIP);
+    }
 
     // Type guard for populated role
     const userRole = user.role as unknown as PopulatedUserRole;
@@ -331,14 +435,6 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-
-// Helper function to record failed login attempts
-function recordFailedAttempt(email: string) {
-  const current = failedAttempts.get(email) || { count: 0, lastAttempt: 0 };
-  current.count += 1;
-  current.lastAttempt = Date.now();
-  failedAttempts.set(email, current);
-}
 
 // Forgot Password - Request password reset
 export const forgotPassword = async (req: Request, res: Response) => {

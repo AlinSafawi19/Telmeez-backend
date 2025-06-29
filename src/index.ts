@@ -36,9 +36,15 @@ app.use(helmet({
 const authLimiter = rateLimit({
   windowMs: SECURITY_CONFIG.RATE_LIMIT.AUTH_WINDOW_MS,
   max: SECURITY_CONFIG.RATE_LIMIT.AUTH_MAX_ATTEMPTS,
-  message: {
-    success: false,
-    message: 'Too many login attempts, please try again later'
+  handler: (_req, res) => {
+    //const resetTime = new Date(Date.now() + SECURITY_CONFIG.RATE_LIMIT.AUTH_WINDOW_MS);
+    const remainingMinutes = Math.ceil(SECURITY_CONFIG.RATE_LIMIT.AUTH_WINDOW_MS / (1000 * 60));
+    
+    res.status(429).json({
+      success: false,
+      error_code: 'RATE_LIMIT_EXCEEDED',
+      message: `Too many login attempts, please try again in ${remainingMinutes} minutes.`
+    });
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -47,9 +53,15 @@ const authLimiter = rateLimit({
 const generalLimiter = rateLimit({
   windowMs: SECURITY_CONFIG.RATE_LIMIT.GENERAL_WINDOW_MS,
   max: SECURITY_CONFIG.RATE_LIMIT.GENERAL_MAX_REQUESTS,
-  message: {
-    success: false,
-    message: 'Too many requests, please try again later'
+  handler: (_req, res) => {
+    //const resetTime = new Date(Date.now() + SECURITY_CONFIG.RATE_LIMIT.GENERAL_WINDOW_MS);
+    const remainingMinutes = Math.ceil(SECURITY_CONFIG.RATE_LIMIT.GENERAL_WINDOW_MS / (1000 * 60));
+    
+    res.status(429).json({
+      success: false,
+      error_code: 'RATE_LIMIT_EXCEEDED',
+      message: `Too many requests, please try again in ${remainingMinutes} minutes.`
+    });
   },
   standardHeaders: true,
   legacyHeaders: false,
