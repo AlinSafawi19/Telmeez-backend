@@ -53,7 +53,7 @@ A Node.js/Express/TypeScript backend for a subscription checkout system with sup
 3. **Environment Configuration**
    Create a `.env` file:
    ```env
-   PORT=3000
+   PORT=5000
    MONGODB_URI=mongodb://localhost:27017/telmeez
    NODE_ENV=development
    ```
@@ -324,7 +324,7 @@ src/
 
 ### Environment Variables
 ```env
-PORT=3000
+PORT=5000
 MONGODB_URI=mongodb://localhost:27017/telmeez
 NODE_ENV=production
 PAYMENT_GATEWAY_API_KEY=your_gateway_key

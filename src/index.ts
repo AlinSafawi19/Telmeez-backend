@@ -10,6 +10,7 @@ import { SECURITY_CONFIG, validateSecurityConfig } from './config/security';
 import checkoutRoutes from './routes/checkout';
 import newsletterRoutes from './routes/newsletter';
 import authRoutes from './routes/auth';
+import statsRoutes from './routes/stats';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -93,6 +94,9 @@ app.get('/api/csrf-token', (req: express.Request & { csrfToken?: () => string },
 
 // Auth routes (no CSRF protection needed)
 app.use('/api/auth', authRoutes);
+
+// Stats routes (no CSRF protection needed - uses JWT auth)
+app.use('/api/stats', statsRoutes);
 
 // Checkout routes (temporarily no CSRF protection)
 app.use('/api/checkout', checkoutRoutes);

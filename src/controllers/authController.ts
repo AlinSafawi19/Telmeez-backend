@@ -4,6 +4,7 @@ import User from '../models/User';
 import VerificationCode from '../models/VerificationCode';
 import { SECURITY_CONFIG } from '../config/security';
 import { generateVerificationCode, sendPasswordResetEmail } from '../services/emailService';
+import { getUserStats } from '../services/statsService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -260,11 +261,22 @@ export const signin = async (req: Request, res: Response) => {
       createdAt: user.createdAt
     };
 
+    // Get user statistics
+    let stats;
+    try {
+      stats = await getUserStats((user._id as any).toString());
+    } catch (error) {
+      console.error('Error getting user stats during signin:', error);
+      // Don't fail the signin if stats fail, just set to null
+      stats = null;
+    }
+
     res.status(200).json({
       success: true,
       message: 'Sign in successful',
       data: {
-        user: userResponse
+        user: userResponse,
+        stats
       }
     });
 

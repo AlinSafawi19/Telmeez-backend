@@ -1,23 +1,27 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import User from './src/models/User';
+import Subscription from './src/models/Subscription';
+import Payment from './src/models/Payment';
+import BillingAddress from './src/models/BillingAddress';
+import PaymentDetail from './src/models/PaymentDetail';
+import Plan from './src/models/Plan';
+import UserRole from './src/models/UserRole';
+import PromoCode from './src/models/PromoCode';
+import PromoCodeUsage from './src/models/PromoCodeUsage';
 
-const MONGO_URI = process.env.MONGO_URI;
+dotenv.config();
+
+const MONGO_URI = process.env['MONGO_URI']; 
 
 async function checkAllCollections() {
   try {
+    if (!MONGO_URI) {
+      throw new Error('MONGO_URI is not defined in environment variables');
+    }
+
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
-
-    // Get all models
-    const User = require('./src/models/User').default;
-    const Subscription = require('./src/models/Subscription').default;
-    const Payment = require('./src/models/Payment').default;
-    const BillingAddress = require('./src/models/BillingAddress').default;
-    const PaymentDetail = require('./src/models/PaymentDetail').default;
-    const Plan = require('./src/models/Plan').default;
-    const UserRole = require('./src/models/UserRole').default;
-    const PromoCode = require('./src/models/PromoCode').default;
-    const PromoCodeUsage = require('./src/models/PromoCodeUsage').default;
 
     console.log('\n=== Database Collections Summary ===');
 
@@ -65,7 +69,7 @@ async function checkAllCollections() {
         console.log(`\nUser ${index + 1}:`);
         console.log(`- Name: ${user.firstName} ${user.lastName}`);
         console.log(`- Email: ${user.email}`);
-        console.log(`- Role: ${user.role?.role}`);
+        console.log(`- Role: ${(user.role as any)?.role || 'Unknown'}`);
         console.log(`- Created: ${user.createdAt}`);
       });
     }
@@ -76,8 +80,8 @@ async function checkAllCollections() {
       const subscriptions = await Subscription.find({}).populate('user plan').limit(5);
       subscriptions.forEach((sub, index) => {
         console.log(`\nSubscription ${index + 1}:`);
-        console.log(`- User: ${sub.user?.email || 'Unknown'}`);
-        console.log(`- Plan: ${sub.plan?.name || 'Unknown'}`);
+        console.log(`- User: ${(sub.user as any)?.email || 'Unknown'}`);
+        console.log(`- Plan: ${(sub.plan as any)?.name || 'Unknown'}`);
         console.log(`- Status: ${sub.status}`);
         console.log(`- Amount: $${sub.totalAmount}`);
         console.log(`- Created: ${sub.createdAt}`);
@@ -90,7 +94,7 @@ async function checkAllCollections() {
       const payments = await Payment.find({}).populate('user').limit(5);
       payments.forEach((payment, index) => {
         console.log(`\nPayment ${index + 1}:`);
-        console.log(`- User: ${payment.user?.email || 'Unknown'}`);
+        console.log(`- User: ${(payment.user as any)?.email || 'Unknown'}`);
         console.log(`- Amount: $${payment.amount}`);
         console.log(`- Status: ${payment.status}`);
         console.log(`- Method: ${payment.paymentMethod}`);
@@ -115,7 +119,7 @@ async function checkAllCollections() {
     if (userRoleCount > 0) {
       console.log('\n=== User Roles ===');
       const roles = await UserRole.find({});
-      roles.forEach((role, index) => {
+      roles.forEach((role) => {
         console.log(`- ${role.role}`);
       });
     }
