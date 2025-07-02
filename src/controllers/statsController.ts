@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getUserStats, getSystemStats } from '../services/statsService';
+import { getUserStats, getSystemStats, getHistoricalStats } from '../services/statsService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -71,6 +71,36 @@ export const getSystemStatistics = async (req: AuthRequest, res: Response): Prom
       success: false,
       error_code: 'INTERNAL_SERVER_ERROR',
       message: 'Failed to get system statistics'
+    });
+  }
+};
+
+export const getHistoricalStatistics = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || !req.user.userId) {
+      res.status(401).json({
+        success: false,
+        error_code: 'UNAUTHORIZED',
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    const historicalStats = await getHistoricalStats(req.user.userId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Historical statistics retrieved successfully',
+      data: {
+        historicalStats
+      }
+    });
+  } catch (error) {
+    console.error('Error getting historical statistics:', error);
+    res.status(500).json({
+      success: false,
+      error_code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to get historical statistics'
     });
   }
 }; 

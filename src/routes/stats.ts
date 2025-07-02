@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserStatistics, getSystemStatistics } from '../controllers/statsController';
+import { getUserStatistics, getSystemStatistics, getHistoricalStatistics } from '../controllers/statsController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -12,5 +12,8 @@ router.get('/user', getUserStatistics);
 
 // Get system statistics (admin only)
 router.get('/system', getSystemStatistics);
+
+// Get historical statistics (for the authenticated user)
+router.get('/historical', getHistoricalStatistics);
 
 export default router; 
