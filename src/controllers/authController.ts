@@ -237,15 +237,19 @@ export const signin = async (req: Request, res: Response) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: SECURITY_CONFIG.COOKIES.HTTP_ONLY,
       secure: SECURITY_CONFIG.COOKIES.SECURE,
-      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE,
-      maxAge: accessTokenMaxAge
+      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE as 'strict' | 'lax' | 'none',
+      maxAge: accessTokenMaxAge,
+      domain: SECURITY_CONFIG.COOKIES.DOMAIN,
+      path: SECURITY_CONFIG.COOKIES.PATH
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: SECURITY_CONFIG.COOKIES.HTTP_ONLY,
       secure: SECURITY_CONFIG.COOKIES.SECURE,
-      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE,
-      maxAge: refreshTokenMaxAge
+      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE as 'strict' | 'lax' | 'none',
+      maxAge: refreshTokenMaxAge,
+      domain: SECURITY_CONFIG.COOKIES.DOMAIN,
+      path: SECURITY_CONFIG.COOKIES.PATH
     });
 
     // Return user data (without password) and token
@@ -344,8 +348,10 @@ export const refreshToken = async (req: Request, res: Response) => {
     res.cookie('accessToken', newAccessToken, {
       httpOnly: SECURITY_CONFIG.COOKIES.HTTP_ONLY,
       secure: SECURITY_CONFIG.COOKIES.SECURE,
-      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE,
-      maxAge: SECURITY_CONFIG.COOKIES.ACCESS_TOKEN_MAX_AGE
+      sameSite: SECURITY_CONFIG.COOKIES.SAME_SITE as 'strict' | 'lax' | 'none',
+      maxAge: SECURITY_CONFIG.COOKIES.ACCESS_TOKEN_MAX_AGE,
+      domain: SECURITY_CONFIG.COOKIES.DOMAIN,
+      path: SECURITY_CONFIG.COOKIES.PATH
     });
 
     res.status(200).json({
@@ -364,9 +370,15 @@ export const refreshToken = async (req: Request, res: Response) => {
 
 export const signout = async (_req: Request, res: Response) => {
   try {
-    // Clear cookies
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    // Clear cookies with same settings
+    res.clearCookie('accessToken', {
+      domain: SECURITY_CONFIG.COOKIES.DOMAIN,
+      path: SECURITY_CONFIG.COOKIES.PATH
+    });
+    res.clearCookie('refreshToken', {
+      domain: SECURITY_CONFIG.COOKIES.DOMAIN,
+      path: SECURITY_CONFIG.COOKIES.PATH
+    });
 
     res.status(200).json({
       success: true,

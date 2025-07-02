@@ -10,6 +10,18 @@ router.post('/signin', signin);
 router.post('/refresh', refreshToken);
 router.post('/signout', signout);
 
+// Debug route to check auth status
+router.get('/status', (req, res) => {
+  const hasAccessToken = req.cookies['accessToken'];
+  const hasRefreshToken = req.cookies['refreshToken'];
+  
+  res.json({
+    hasAccessToken: !!hasAccessToken,
+    hasRefreshToken: !!hasRefreshToken,
+    cookies: req.cookies
+  });
+});
+
 // Password reset routes
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-code', verifyPasswordResetCode);

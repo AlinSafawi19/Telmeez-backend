@@ -44,9 +44,11 @@ export const SECURITY_CONFIG = {
   COOKIES: {
     HTTP_ONLY: true,
     SECURE: process.env['NODE_ENV'] === 'production',
-    SAME_SITE: 'strict' as const,
+    SAME_SITE: process.env['NODE_ENV'] === 'production' ? 'strict' : 'lax' as const,
     ACCESS_TOKEN_MAX_AGE: 60 * 60 * 1000, // 1 hour
     REFRESH_TOKEN_MAX_AGE: 7 * 24 * 60 * 60 * 1000, // 7 days
+    DOMAIN: process.env['COOKIE_DOMAIN'] || undefined,
+    PATH: '/',
   },
 
   // CORS Configuration
